@@ -69,3 +69,16 @@ td{padding:17px 20px;border-top:1px solid var(--line)}.r{text-align:right}.hot{c
 .p-right{padding:32px}.p-right h2{font-size:20px;font-weight:800;margin:10px 0 12px;color:var(--navy)}.p-right .grid2{margin-top:22px}
 .field{background:var(--field);border:1px solid var(--line);border-radius:10px;padding:14px}.field small{font-size:10px;letter-spacing:.1em;text-transform:uppercase;margin-bottom:8px}.field strong{font-size:13px;font-weight:500}.field.safe{background:var(--card);margin-top:10px;padding:20px}.field.safe strong{display:block;font-weight:700;margin-bottom:10px}.field.safe small{text-transform:none;letter-spacing:0;margin:0;font-size:11px}
 @media(max-width:900px){.login{grid-template-columns:1fr}.login-hero{display:none}.shell{grid-template-columns:1fr}.sidebar{position:fixed;bottom:0;top:auto;height:auto;width:100%;z-index:10;flex-direction:row}.side-logo,.side-foot{display:none}.sidebar nav{display:flex;overflow:auto;padding:6px}.nav-item{padding:0 10px;height:40px;white-space:nowrap}.content{padding:16px 14px 90px}.stats,.two,.two.rep,.profile{grid-template-columns:1fr}.card{overflow-x:auto}.toast{width:calc(100% - 24px);left:12px;transform:none;bottom:70px}}
+.badge{align-self:flex-start;font-size:10px;font-weight:700;padding:6px 11px;border:1px solid var(--line);border-radius:99px;background:var(--card);box-shadow:var(--shadow)}
+tr.sel td{background:var(--bg)}
+.hist{border-top:1px solid var(--line);padding:22px 20px 24px}
+.hist-head{display:flex;justify-content:space-between;align-items:flex-start}
+.hist-head h3{font-size:18px;font-weight:800;margin:10px 0 6px;color:var(--navy)}
+.hist-head p{font-size:11px;color:var(--muted)}
+.hist-cards{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin:20px 0 18px}
+.mini{border:1px solid var(--line);border-radius:10px;padding:16px 14px;background:var(--card)}
+.mini small{font-size:10px}
+.mini strong{display:flex;align-items:center;gap:8px;font-size:18px;font-weight:800;margin-top:12px}
+.chart-wrap{border-radius:12px;background:var(--bg);padding:12px 8px 4px;color:var(--text)}
+.chart{display:block;width:100%;height:auto}
+@media(max-width:900px){.hist-cards{grid-template-columns:1fr}}
