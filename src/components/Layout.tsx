@@ -1,13 +1,16 @@
 import { useEffect, useState } from 'react'
 import { NavLink, Outlet, useNavigate } from 'react-router-dom'
-import { Bell, FileText, LayoutGrid, LogIn, Moon, Sun, Truck, Users } from 'lucide-react'
+import { Activity, Bell, FileText, LayoutGrid, LogIn, Moon, Sun, Truck, Users } from 'lucide-react'
 import Logo from './Logo'
-import { alerts, user } from '../data'
+import { api } from '../api'
+import { useAsyncData } from '../hooks/useAsyncData'
+import { alertColor, alertDetail, alertTitle, roleLabel, timeAgo } from '../data'
 
 const nav = [
   { to: '/', label: 'Visão geral', icon: LayoutGrid },
   { to: '/viagens', label: 'Viagens', icon: Truck },
   { to: '/alertas', label: 'Alertas', icon: Bell },
+  { to: '/logs-iot', label: 'Logs IoT', icon: Activity },
   { to: '/equipe', label: 'Equipe', icon: Users },
   { to: '/relatorios', label: 'Relatórios', icon: FileText },
 ]
@@ -27,9 +30,29 @@ export const ThemeButton = () => {
 
 export default function Layout({ onLogout }: { onLogout: () => void }) {
   const [open, setOpen] = useState(false)
-  const [toast, setToast] = useState(true)
+  const [toast, setToast] = useState(false)
   const navigate = useNavigate()
-  useEffect(() => { const t = setTimeout(() => setToast(false), 8000); return () => clearTimeout(t) }, [])
+  const { data: alerts } = useAsyncData(() => api.alerts())
+  const { data: currentUser } = useAsyncData(() => api.currentUser())
+
+  const alertList = alerts ?? []
+  const activeAlerts = alertList.filter(a => !a.resolved).length
+  const toastAlert = alertList.find(a => !a.resolved)
+
+  useEffect(() => {
+    if (!toastAlert) {
+      setToast(false)
+      return
+    }
+    setToast(true)
+    const timer = setTimeout(() => setToast(false), 8000)
+    return () => clearTimeout(timer)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [toastAlert?.id])
+
+  const userName = currentUser?.name ?? 'Usuário'
+  const userRole = currentUser ? roleLabel(currentUser.role) : '—'
+
   return (
     <div className="shell">
       <aside className="sidebar">
@@ -43,8 +66,8 @@ export default function Layout({ onLogout }: { onLogout: () => void }) {
         </nav>
         <div className="side-foot">
           <button className="user-chip" onClick={() => navigate('/perfil')}>
-            <span className="avatar light">K</span>
-            <span><strong>{user.name}</strong><small>{user.role}</small></span>
+            <span className="avatar light">{userName.charAt(0).toUpperCase()}</span>
+            <span><strong>{userName}</strong><small>{userRole}</small></span>
           </button>
           <button className="logout" onClick={onLogout}><LogIn size={15} />Sair</button>
         </div>
@@ -56,18 +79,25 @@ export default function Layout({ onLogout }: { onLogout: () => void }) {
             <ThemeButton />
             <div className="rel">
               <button className="icon-btn" onClick={() => setOpen(o => !o)} aria-label="Notificações">
-                <Bell size={16} /><i className="dot" />
+                <Bell size={16} />{activeAlerts > 0 && <i className="dot" />}
               </button>
               {open && (
                 <div className="notif">
                   <div className="notif-head">
-                    <div><h4>Notificações</h4><small>3 alertas recentes</small></div>
-                    <span className="pill red">2 ativos</span>
+                    <div>
+                      <h4>Notificações</h4>
+                      <small>{alertList.length} alertas recentes</small>
+                    </div>
+                    <span className="pill red">{activeAlerts} ativos</span>
                   </div>
-                  {alerts.map(a => (
+                  {alertList.slice(0, 5).map(a => (
                     <div key={a.id} className="notif-item">
-                      <i className={`bullet ${a.color}`} />
-                      <div><strong>{a.title}</strong><small>{a.detail}</small><small>{a.ago}</small></div>
+                      <i className={`bullet ${alertColor(a)}`} />
+                      <div>
+                        <strong>{alertTitle(a)}</strong>
+                        <small>{alertDetail(a)}</small>
+                        <small>{timeAgo(a.createdAt)}</small>
+                      </div>
                     </div>
                   ))}
                   <button className="notif-foot" onClick={() => { setOpen(false); navigate('/alertas') }}>Ver todos os alertas</button>
@@ -78,10 +108,13 @@ export default function Layout({ onLogout }: { onLogout: () => void }) {
         </header>
         <main className="content"><Outlet /></main>
       </div>
-      {toast && (
+      {toast && toastAlert && (
         <div className="toast" role="alert">
           <span className="toast-ic"><Bell size={16} /></span>
-          <div><strong>Alerta de temperatura alta</strong><p>Baú a 13,8 °C. Verifique a refrigeração imediatamente.</p></div>
+          <div>
+            <strong>{alertTitle(toastAlert)}</strong>
+            <p>{alertDetail(toastAlert)}. Verifique a refrigeração imediatamente.</p>
+          </div>
           <button onClick={() => setToast(false)} aria-label="Fechar">✕</button>
         </div>
       )}

@@ -1,27 +1,63 @@
-export type Status = 'Atenção' | 'Normal'
-export interface Trip { id: string; route: string; cargo: string; temp: number; status: Status; series: number[] }
-export interface Alert { id: number; title: string; detail: string; ago: string; color: 'red' | 'orange' | 'green' }
-export interface Member { name: string; email: string; role: 'Administrador' | 'Motorista' }
-export interface Driver { name: string; trips: number; inRange: number }
+import type { AlertResponse, Role, TripMonitor } from './api'
 
-// séries de 13 pontos: 06h, 07h, ..., 18h
-export const trips: Trip[] = [
-  { id: 'FV-024', route: 'Petrolina → Recife', cargo: 'Uva Vitória', temp: 13.8, status: 'Atenção',
-    series: [8.6, 9.0, 9.4, 9.2, 10.6, 11.6, 10.4, 9.6, 10.2, 12.6, 11.6, 12.8, 13.8] },
-  { id: 'FV-018', route: 'Juazeiro → Salvador', cargo: 'Manga Palmer', temp: 11.4, status: 'Normal',
-    series: [10.0, 10.4, 9.6, 9.2, 9.8, 10.6, 11.4, 12.3, 11.6, 10.8, 11.9, 11.2, 11.4] },
-  { id: 'FV-011', route: 'Petrolina → Fortaleza', cargo: 'Uva Itália', temp: 10.2, status: 'Normal',
-    series: [9.0, 9.4, 9.8, 10.4, 10.9, 10.5, 10.0, 9.6, 9.9, 10.4, 10.8, 10.5, 10.2] },
-]
-export const alerts: Alert[] = [
-  { id: 1, title: 'Temperatura acima da faixa', detail: 'FV-024 • 13,8 °C', ago: 'Há 4 min', color: 'red' },
-  { id: 2, title: 'Oscilação detectada', detail: 'FV-018 • variação de 3,1 °C', ago: 'Há 18 min', color: 'orange' },
-  { id: 3, title: 'Temperatura normalizada', detail: 'FV-011 • 10,2 °C', ago: 'Há 42 min', color: 'green' },
-]
-export const drivers: Driver[] = [
-  { name: 'Carlos Almeida', trips: 8, inRange: 96 },
-  { name: 'Marina Santos', trips: 6, inRange: 93 },
-  { name: 'João Ferreira', trips: 5, inRange: 89 },
-]
-export const user = { name: 'Kallyne Victoria Gomes de Melo', email: 'kallyne@gmail.com', phone: '81999999999', role: 'Administrador' as const }
 export const fmt = (n: number) => n.toFixed(1).replace('.', ',')
+
+export const fmtTemp = (n: number | null | undefined) =>
+  n == null || Number.isNaN(n) ? '—' : `${fmt(n)} °C`
+
+export const tripCode = (id: number) => `FV-${String(id).padStart(3, '0')}`
+
+export const tripRoute = (trip: TripMonitor) =>
+  trip.origin && trip.destination ? `${trip.origin} → ${trip.destination}` : `${trip.containerCode} • ${trip.fruitName}`
+
+export function tripStatus(trip: TripMonitor): { label: string; tone: 'red' | 'green' | 'soft' } {
+  if (trip.inRange === true) return { label: 'Normal', tone: 'green' }
+  if (trip.inRange === false) return { label: 'Atenção', tone: 'red' }
+  return { label: 'Sem leitura', tone: 'soft' }
+}
+
+export function alertTitle(alert: AlertResponse) {
+  if (alert.temperature == null) return 'Alerta de temperatura'
+  if (alert.temperature > alert.maxTemp) return 'Temperatura acima da faixa'
+  if (alert.temperature < alert.minTemp) return 'Temperatura abaixo da faixa'
+  return 'Temperatura fora da faixa'
+}
+
+export const alertDetail = (alert: AlertResponse) =>
+  `${alert.containerCode} • ${fmtTemp(alert.temperature)}`
+
+export const alertColor = (alert: AlertResponse): 'red' | 'green' => (alert.resolved ? 'green' : 'red')
+
+export function timeAgo(value?: string | null) {
+  if (!value) return '—'
+  const date = new Date(value)
+  const diff = Date.now() - date.getTime()
+  if (Number.isNaN(diff)) return '—'
+  const minutes = Math.floor(diff / 60000)
+  if (minutes < 1) return 'Agora'
+  if (minutes < 60) return `Há ${minutes} min`
+  const hours = Math.floor(minutes / 60)
+  if (hours < 24) return `Há ${hours} h`
+  return `Há ${Math.floor(hours / 24)} d`
+}
+
+export function formatDateTime(value?: string | null) {
+  if (!value) return '—'
+  const date = new Date(value)
+  if (Number.isNaN(date.getTime())) return '—'
+  return date.toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' })
+}
+
+export const roleLabel = (role: Role) => (role === 'ROLE_DRIVER' ? 'Motorista' : 'Administrador')
+
+export const roleValue = (label: string): Role => (label === 'Motorista' ? 'ROLE_DRIVER' : 'ROLE_COMPANY')
+
+export const monthNames = [
+  'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
+  'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro',
+]
+
+export const currentMonthName = () => monthNames[new Date().getMonth()]
+
+export const yearOptions = () =>
+  Array.from({ length: 6 }, (_, index) => String(new Date().getFullYear() - index))

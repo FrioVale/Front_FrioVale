@@ -2,6 +2,7 @@ import { FormEvent, useState } from 'react'
 import { ArrowRight, Check } from 'lucide-react'
 import Logo from '../components/Logo'
 import { ThemeButton } from '../components/Layout'
+import { api, session } from '../api'
 
 const maskPhone = (v: string) => {
   const d = v.replace(/\D/g, '').slice(0, 11)
@@ -12,9 +13,35 @@ const maskPhone = (v: string) => {
 
 export default function Login({ onLogin }: { onLogin: () => void }) {
   const [tab, setTab] = useState<'in' | 'up'>('in')
+  const [name, setName] = useState('')
   const [phone, setPhone] = useState('')
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+  const [error, setError] = useState('')
+  const [busy, setBusy] = useState(false)
   const signup = tab === 'up'
-  const submit = (e: FormEvent) => { e.preventDefault(); onLogin() }
+
+  const changeTab = (next: 'in' | 'up') => {
+    setTab(next)
+    setError('')
+  }
+
+  const submit = async (e: FormEvent) => {
+    e.preventDefault()
+    setError('')
+    setBusy(true)
+    try {
+      const result = signup
+        ? await api.register({ name, email, phone: phone || undefined, password })
+        : await api.login({ email, password })
+      session.save(result.token)
+      onLogin()
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Não foi possível entrar. Tente novamente.')
+    } finally {
+      setBusy(false)
+    }
+  }
 
   return (
     <div className="login">
@@ -42,25 +69,27 @@ export default function Login({ onLogin }: { onLogin: () => void }) {
           </p>
 
           <div className="tabs">
-            <button type="button" className={tab === 'in' ? 'on' : ''} onClick={() => setTab('in')}>Entrar</button>
-            <button type="button" className={tab === 'up' ? 'on' : ''} onClick={() => setTab('up')}>Cadastrar</button>
+            <button type="button" className={tab === 'in' ? 'on' : ''} onClick={() => changeTab('in')}>Entrar</button>
+            <button type="button" className={tab === 'up' ? 'on' : ''} onClick={() => changeTab('up')}>Cadastrar</button>
           </div>
 
           {signup && (
             <>
               <label>Nome completo</label>
-              <input placeholder="Como devemos chamar você?" required />
+              <input placeholder="Como devemos chamar você?" value={name} onChange={e => setName(e.target.value)} required />
               <label>Telefone</label>
               <input type="tel" placeholder="(87) 99999-0000" value={phone} onChange={e => setPhone(maskPhone(e.target.value))} required />
             </>
           )}
           <label>E-mail</label>
-          <input type="email" placeholder="voce@empresa.com.br" required />
+          <input type="email" placeholder="voce@empresa.com.br" value={email} onChange={e => setEmail(e.target.value)} required />
           <label>Senha</label>
-          <input type="password" placeholder="Mínimo de 8 caracteres" minLength={8} required />
+          <input type="password" placeholder="Mínimo de 8 caracteres" minLength={8} value={password} onChange={e => setPassword(e.target.value)} required />
 
-          <button className="btn primary block" type="submit">
-            {signup ? 'Criar minha conta' : 'Entrar no FrioVale'} <ArrowRight size={16} />
+          {error && <p className="muted" role="alert" style={{ color: '#c0392b' }}>{error}</p>}
+
+          <button className="btn primary block" type="submit" disabled={busy}>
+            {busy ? 'Aguarde...' : signup ? 'Criar minha conta' : 'Entrar no FrioVale'} <ArrowRight size={16} />
           </button>
           <p className="legal">Ao continuar, você concorda com o uso seguro dos dados operacionais para monitoramento da cadeia fria.</p>
         </form>
