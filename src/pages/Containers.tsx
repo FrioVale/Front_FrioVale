@@ -1,7 +1,24 @@
 import { FormEvent, useCallback, useEffect, useState } from 'react'
-import { Plus, Trash2, Edit2, Save, X } from 'lucide-react'
-import { api, type ContainerRequest, type ContainerResponse } from '../api'
+import { Plus, Trash2, Edit2, Save, X, Activity } from 'lucide-react'
+import { api, type ContainerRequest, type ContainerResponse, type ImpactResponse } from '../api'
 import { useAsyncData } from '../hooks/useAsyncData'
+
+/** Status inferido do acelerômetro a partir do sinal mais recente do próprio sensor. */
+function accelStatus(impacts: ImpactResponse[]): { label: string; tone: string } {
+  if (impacts.length === 0) return { label: 'Sem sinal recente', tone: 'soft' }
+  const last = impacts.reduce((a, b) =>
+    new Date(b.originalTimestamp) > new Date(a.originalTimestamp) ? b : a)
+  const minutes = (Date.now() - new Date(last.originalTimestamp).getTime()) / 60000
+  if (minutes > 2) return { label: 'Sem sinal recente', tone: 'soft' }
+  return { label: 'Ativo', tone: 'green' }
+}
+
+/** Badge de status do acelerômetro de um contêiner. */
+function AccelStatus({ containerId }: { containerId: number }) {
+  const { data } = useAsyncData(() => api.impactsByContainer(containerId), [containerId])
+  const status = accelStatus(data ?? [])
+  return <span className={`pill ${status.tone}`} style={{ marginTop: 4 }}><Activity size={11} /> {status.label}</span>
+}
 
 export default function Containers() {
   const { data, loading, error, reload } = useAsyncData(() => api.containers())
@@ -167,6 +184,7 @@ export default function Containers() {
                     <small style={{ display: 'block', marginTop: 2 }}>
                       Dispositivo IoT: {c.thingSpeakChannelId || '—'}
                     </small>
+                    <AccelStatus containerId={c.id} />
                     <span className={`pill ${inUse ? 'red' : 'green'}`} style={{ marginLeft: 'auto' }}>
                       {inUse ? 'Em viagem' : 'Disponível'}
                     </span>

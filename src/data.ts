@@ -1,4 +1,4 @@
-import type { AlertResponse, Role, TripMonitor } from './api'
+import type { AlertResponse, Role, TripMonitor, UserResponse } from './api'
 
 export const fmt = (n: number) => n.toFixed(1).replace('.', ',')
 
@@ -51,6 +51,17 @@ export function formatDateTime(value?: string | null) {
 export const roleLabel = (role: Role) => (role === 'ROLE_DRIVER' ? 'Motorista' : 'Administrador')
 
 export const roleValue = (label: string): Role => (label === 'Motorista' ? 'ROLE_DRIVER' : 'ROLE_COMPANY')
+
+export const isDriver = (role: Role | undefined): boolean => role === 'ROLE_DRIVER'
+
+/**
+ * Códigos dos contêineres das viagens do motorista logado.
+ * Usado para restringir a visão do motorista apenas ao(s) seu(s) contêiner(es).
+ */
+export function driverContainerCodes(user: UserResponse | null | undefined, trips: TripMonitor[]): string[] {
+  if (!user || !isDriver(user.role)) return []
+  return Array.from(new Set(trips.filter(t => t.driverId === user.id && t.containerCode).map(t => t.containerCode!)))
+}
 
 export const monthNames = [
   'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',

@@ -96,3 +96,23 @@ tr.sel td{background:var(--bg)}
 .chart-wrap{border-radius:12px;background:var(--bg);padding:12px 8px 4px;color:var(--text)}
 .chart{display:block;width:100%;height:auto}
 @media(max-width:900px){.hist-cards{grid-template-columns:1fr}}
+
+/* Dica quando faltam dados básicos para cadastrar viagem */
+.hint-box{background:var(--soft);border:1px solid var(--line);border-radius:10px;padding:14px 16px;font-size:12px;color:var(--text)}
+.hint-box strong{display:block;font-size:13px;margin-bottom:6px;color:var(--navy)}
+.hint-box p{margin:6px 0 0;color:var(--muted);line-height:1.6}
+
+/* ===== Monitoramento: abas e impactos do acelerômetro ===== */
+.monitor-tabs{margin:18px 0 4px}
+.impact-wrap{padding:16px 14px}
+.impact-status{margin:0 0 14px;text-align:center}
+/* Linha do tempo verde-azulada com um ponto por impacto */
+.impact-timeline{display:flex;flex-direction:column;gap:0;position:relative;padding:4px 0}
+.impact-timeline::before{content:"";position:absolute;left:9px;top:12px;bottom:12px;width:2px;background:linear-gradient(180deg,var(--teal),var(--green))}
+.impact-point{position:relative;display:flex;align-items:center;gap:14px;width:100%;padding:10px 8px 10px 0;border:0;background:transparent;text-align:left;cursor:pointer;border-radius:8px}
+.impact-point:hover{background:var(--soft)}
+.impact-point:focus-visible{outline:2px solid var(--teal);outline-offset:2px}
+.impact-dot{width:12px;height:12px;border-radius:50%;background:var(--teal);border:2px solid var(--card);box-shadow:0 0 0 2px var(--teal);flex:none;z-index:1}
+.impact-info{display:flex;flex-direction:column;gap:2px}
+.impact-info strong{font-size:13px;color:var(--navy)}
+.impact-info small{font-size:11px}

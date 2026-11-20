@@ -137,6 +137,42 @@ export interface DriverStats {
   inRangePercent: number | null
 }
 
+/** Evento individual de impacto do acelerômetro (field1=800). */
+export interface ImpactResponse {
+  id: number
+  tripId: number | null
+  containerId: number
+  containerCode: string
+  plate: string | null
+  peakG: number
+  originalTimestamp: string
+  receivedAt: string
+  createdAt: string
+}
+
+/** Alerta gerado por impacto acima do limiar. */
+export interface ImpactAlertResponse {
+  alertId: number
+  impactId: number
+  tripId: number | null
+  containerCode: string
+  plate: string | null
+  peakG: number
+  message: string
+  timestamp: string
+}
+
+/** Resumo dos impactos de uma viagem + status do sensor. */
+export interface ImpactSummaryResponse {
+  total: number
+  maxPeakG: number | null
+  lastImpact: ImpactResponse | null
+  /** ACTIVE_WITH_IMPACTS | ACTIVE_NO_IMPACTS | NO_RECENT_DATA | CALIBRATING */
+  sensorStatus: string
+  /** Mensagem amigável em pt-BR (null quando há impactos). */
+  message: string | null
+}
+
 export interface AuthResponse {
   token: string
   tokenType: string
@@ -238,6 +274,15 @@ export const api = {
   deleteContainer: (id: number) =>
     request<void>(`/api/containers/${id}`, { method: 'DELETE' }),
   telemetry: (tripId: number) => request<TelemetryResponse[]>(`/api/trips/${tripId}/telemetry`),
+
+  // Impactos do acelerômetro
+  impactsByTrip: (tripId: number) => request<ImpactResponse[]>(`/api/impacts/trips/${tripId}`),
+  impactSummary: (tripId: number) => request<ImpactSummaryResponse>(`/api/impacts/trips/${tripId}/summary`),
+  impactsByContainer: (containerId: number) => request<ImpactResponse[]>(`/api/impacts/containers/${containerId}`),
+  recentImpacts: () => request<ImpactResponse[]>(`/api/impacts`),
+  impactAlerts: () => request<ImpactAlertResponse[]>(`/api/impacts/alerts`),
+  syncImpacts: (containerId?: number, results = 100) =>
+    request<{ saved: number }>(`/api/impacts/sync?results=${results}${containerId ? `&containerId=${containerId}` : ''}`, { method: 'POST' }),
 
   alerts: () => request<AlertResponse[]>('/api/alerts'),
 

@@ -1,10 +1,11 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { NavLink, Outlet, useNavigate } from 'react-router-dom'
 import { Activity, Bell, Box, FileText, LayoutGrid, LogIn, Moon, Sun, Truck, Users } from 'lucide-react'
 import Logo from './Logo'
-import { api } from '../api'
+import Acessibilidade from './Acessibilidade'
+import { api, type UserResponse } from '../api'
 import { useAsyncData } from '../hooks/useAsyncData'
-import { alertColor, alertDetail, alertTitle, roleLabel, timeAgo } from '../data'
+import { alertColor, alertDetail, alertTitle, driverContainerCodes, isDriver, roleLabel, timeAgo } from '../data'
 
 const nav = [
   { to: '/', label: 'Visão geral', icon: LayoutGrid },
@@ -14,6 +15,12 @@ const nav = [
   { to: '/logs-iot', label: 'Logs IoT', icon: Activity },
   { to: '/equipe', label: 'Equipe', icon: Users },
   { to: '/relatorios', label: 'Relatórios', icon: FileText },
+]
+
+// Motorista só acessa Visão geral e Alertas.
+const driverNav = [
+  { to: '/', label: 'Visão geral', icon: LayoutGrid },
+  { to: '/alertas', label: 'Alertas', icon: Bell },
 ]
 
 export function useTheme() {
@@ -29,14 +36,18 @@ export const ThemeButton = () => {
   return <button className="icon-btn" onClick={toggle} aria-label="Alternar tema">{dark ? <Sun size={16} /> : <Moon size={16} />}</button>
 }
 
-export default function Layout({ onLogout }: { onLogout: () => void }) {
+export default function Layout({ user, onLogout }: { user: UserResponse | null; onLogout: () => void }) {
   const [open, setOpen] = useState(false)
   const [toast, setToast] = useState(false)
   const navigate = useNavigate()
   const { data: alerts } = useAsyncData(() => api.alerts())
-  const { data: currentUser } = useAsyncData(() => api.currentUser())
+  const { data: trips } = useAsyncData(() => api.trips())
 
-  const alertList = alerts ?? []
+  const driver = isDriver(user?.role)
+  const navItems = driver ? driverNav : nav
+
+  const containerCodes = useMemo(() => driverContainerCodes(user, trips ?? []), [user, trips])
+  const alertList = driver ? (alerts ?? []).filter(a => containerCodes.includes(a.containerCode)) : (alerts ?? [])
   const activeAlerts = alertList.filter(a => !a.resolved).length
   const toastAlert = alertList.find(a => !a.resolved)
 
@@ -51,15 +62,15 @@ export default function Layout({ onLogout }: { onLogout: () => void }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [toastAlert?.id])
 
-  const userName = currentUser?.name ?? 'Usuário'
-  const userRole = currentUser ? roleLabel(currentUser.role) : '—'
+  const userName = user?.name ?? 'Usuário'
+  const userRole = user ? roleLabel(user.role) : '—'
 
   return (
     <div className="shell">
       <aside className="sidebar">
         <div className="side-logo"><Logo size={22} /></div>
         <nav>
-          {nav.map(({ to, label, icon: Icon }) => (
+          {navItems.map(({ to, label, icon: Icon }) => (
             <NavLink key={to} to={to} end={to === '/'} className={({ isActive }) => 'nav-item' + (isActive ? ' active' : '')}>
               <Icon size={16} />{label}
             </NavLink>
@@ -119,6 +130,7 @@ export default function Layout({ onLogout }: { onLogout: () => void }) {
           <button onClick={() => setToast(false)} aria-label="Fechar">✕</button>
         </div>
       )}
+      <Acessibilidade />
     </div>
   )
 }

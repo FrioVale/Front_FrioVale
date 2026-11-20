@@ -1,0 +1,87 @@
+/* ===== Acessibilidade: coluna de atalhos flutuantes (referência gov.br) ===== */
+/* Único contêiner fixo na lateral direita, com os 3 atalhos em coluna */
+#botoes-acessibilidade-extra {
+  position: fixed;
+  top: 50%;
+  right: 12px; /* espaço para barra de rolagem */
+  transform: translateY(-50%);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  z-index: 10000;
+  pointer-events: auto;
+}
+
+/* Padronização dos 3 botões: 48x48, fundo azul-marinho (#143a5c), cantos arredondados */
+/* Nenhum position/fixed/absolute/margem negativa nos botões individuais */
+#botoes-acessibilidade-extra button {
+  width: 48px;
+  height: 48px;
+  border: none;
+  outline: none;
+  border-radius: 10px 0 0 10px;
+  background-color: #143a5c;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.2);
+  transition: background-color 0.2s, transform 0.1s;
+}
+
+#botoes-acessibilidade-extra button img {
+  width: 26px;
+  height: 26px;
+  filter: brightness(200%) contrast(1.2);
+  display: block;
+}
+
+/* Foco do teclado destacado */
+#botoes-acessibilidade-extra button:focus-visible {
+  outline: 3px solid #fff;
+  outline-offset: 2px;
+}
+
+/* Estado ativo (ex: painel aberto, áudio tocando) */
+#botoes-acessibilidade-extra button.ativo {
+  background-color: #0b7c8a;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+}
+
+/* Suprime o atalho flutuante e seu aviso, sem afetar o painel. */
+#vlibras-access-wrapper {
+  display: none !important;
+}
+
+.vlibras-error {
+  position: absolute;
+  right: 100%;
+  top: 50%;
+  width: max-content;
+  max-width: 190px;
+  margin-right: 8px;
+  padding: 8px 12px;
+  border-radius: 8px;
+  background: #143a5c;
+  color: white;
+  font-size: 0.875rem;
+}
+
+/* ===== Ajuste mobile ===== */
+@media (max-width: 768px) {
+  #botoes-acessibilidade-extra {
+    top: auto;
+    bottom: 90px;
+    right: 8px;
+    transform: none;
+    flex-direction: row;
+    gap: 8px;
+    z-index: 10000;
+  }
+
+  #botoes-acessibilidade-extra button {
+    width: 44px;
+    height: 44px;
+    border-radius: 8px;
+  }
+}

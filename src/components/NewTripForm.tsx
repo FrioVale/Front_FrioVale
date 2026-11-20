@@ -170,9 +170,8 @@ export function NewTripForm({ open, onClose, mode, trip, unavailableContainerIds
   const isEdit = mode === 'edit'
 
   return (
-    <>
-      <div className="modal-overlay" onClick={onClose} />
-      <div className="modal" ref={modalRef} role="dialog" aria-modal="true" aria-labelledby="trip-form-title">
+    <div className="modal-overlay" onClick={onClose}>
+      <div className="modal" ref={modalRef} role="dialog" aria-modal="true" aria-labelledby="trip-form-title" onClick={e => e.stopPropagation()}>
         <button className="modal-close" onClick={onClose} aria-label="Fechar">
           <X size={18} />
         </button>
@@ -182,11 +181,21 @@ export function NewTripForm({ open, onClose, mode, trip, unavailableContainerIds
             <p className="muted">
               {isEdit
                 ? 'Altere os dados da viagem. O status respeita as regras de transição do sistema.'
-                : 'Cadastre uma viagem de transporte refrigerado. Campos com <span className="req">*</span> são obrigatórios.'}
+                : ''}
             </p>
           </div>
 
           {optionsError && <p className="msg-error">{optionsError}</p>}
+
+          {/* Orientação quando não há dados básicos cadastrados (ex.: banco novo) */}
+          {!loadingOptions && !optionsError && (containers.length === 0 || drivers.length === 0 || fruitList.length === 0) && (
+            <div className="hint-box">
+              <strong>Cadastre os dados básicos antes de criar uma viagem:</strong>
+              {containers.length === 0 && <p>Nenhum contêiner cadastrado — vá em <b>Contêineres</b> e adicione um com o ID do canal ThingSpeak.</p>}
+              {drivers.length === 0 && <p>Nenhum motorista cadastrado — vá em <b>Equipe</b> e cadastre um (a senha provisória será enviada por e-mail).</p>}
+              {fruitList.length === 0 && <p>Nenhuma fruta disponível — verifique o cadastro de frutas no banco.</p>}
+            </div>
+          )}
 
           <div className="grid2">
             <div>
@@ -296,7 +305,7 @@ export function NewTripForm({ open, onClose, mode, trip, unavailableContainerIds
               <option value="COMPLETED">Encerrada</option>
             </select>
             <p className="muted" style={{ fontSize: 11, marginTop: 4 }}>
-              Planejada → ainda não iniciada. Em andamento → viagem iniciada (IN_TRANSIT). Encerrada → viagem finalizada.
+              
             </p>
           </div>
 
@@ -325,6 +334,6 @@ export function NewTripForm({ open, onClose, mode, trip, unavailableContainerIds
           </button>
         </form>
       </div>
-    </>
+    </div>
   )
 }
